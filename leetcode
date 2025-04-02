@@ -1,0 +1,11 @@
+// 1 - leetcode
+
+async function sleep(millis) {
+    await new Promise(resolve => 
+        setTimeout(resolve, millis))
+}
+
+
+// 2 - leetcode
+
+select name, population, area from world where area >= 3000000 or population >= 25000000;
