@@ -1,0 +1,6 @@
+export * from "./footballClubsModel"
+export * from "./matchFixturesModel"
+export * from "./playersModel"
+export * from "./teamsModel"
+export * from "./tournamentGroupsModel"
+export * from "./tournamentsModel"
