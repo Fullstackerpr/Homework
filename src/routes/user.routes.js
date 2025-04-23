@@ -7,6 +7,7 @@ const controller = new UserController;
 
 
 router
+    .post('/signin', controller.signinUser)
     .post('/', controller.createUser)
     .get('/', controller.getAllUsers)
     .get('/:id', controller.getUserById)

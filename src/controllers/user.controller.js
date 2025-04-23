@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import { catchError } from "../utils/error-response.js";
 import { userValidator } from "../utils/user.validation.js";
 import { decode, encode } from "../utils/bcrypt-encrypt.js";
+import { ganarateAccessToken, ganarateRefreshToken } from "../utils/ganarate-token.js";
 
 
 export class UserController {
@@ -98,6 +99,37 @@ export class UserController {
                 message: 'success',
                 data: {}
             });
+        } catch (error) {
+            catchError(error, res);
+        }
+    }
+
+    async signinUser(req, res) {
+        try {
+            const {name, password} = req.body;
+            const user = await User.findOne({name});
+
+            if(!user){
+                throw new Error ("User not found!");
+            }
+
+            const isMatchPassword = await encode(password, user.hashedPassword);
+            if(!isMatchPassword){
+                throw new Error("Invalid password");
+            }
+
+            const payload = {id: user._id, role: user.role};
+            const accessToken = ganarateAccessToken(payload);
+            const refreshToken = ganarateRefreshToken(payload);
+
+            return res.status(200).json({
+                statusCode: 200,
+                message: 'succeess',
+                data: {
+                    accessToken, refreshToken
+                }
+            })
+
         } catch (error) {
             catchError(error, res);
         }
