@@ -3,7 +3,9 @@ import { catchError } from "../utils/error-response.js";
 import { userValidator } from "../utils/user.validation.js";
 import { decode, encode } from "../utils/bcrypt-encrypt.js";
 import { successRes } from "../utils/success-response.js";
+import {transporter} from '../utils/mailer.js';
 import { ganarateAccessToken, ganarateRefreshToken } from "../utils/ganarate-token.js";
+import MailMessage from "nodemailer/lib/mailer/mail-message.js";
 
 
 export class UserController {
@@ -108,6 +110,24 @@ export class UserController {
                 secure: true,
                 maxAge: 30 * 24 * 60 * 60 * 1000
             });
+
+            const mailMessage = {
+                from: process.env.SMTP_USER,
+                to: 'bahodirnabijanov782@gmail.com',
+                subject: 'Visca Barca',
+                text:'HALA MADRID && VISCA BARSA'
+            }
+
+            transporter.sendMail(mailMessage, function(err, info){
+                if(err){
+                    catchError(res, 400, `error on sending to mail ${err}`)
+                }else{
+                    console.log(info);
+                }
+            })
+    
+ 
+            
 
             successRes(res, 200, accessToken);
 
