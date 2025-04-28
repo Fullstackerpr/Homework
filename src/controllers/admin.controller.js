@@ -1,6 +1,6 @@
 import Admin from '../models/admin.model.js';
 import { catchError } from '../utils/error-response.js';
-import { adminValidator } from '../utils/admin.validation.js';
+import { adminValidator } from '../validation/admin.validation.js';
 import { decode, encode } from '../utils/bcrypt-encrypt.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/generate-token.js';
 import jwt from 'jsonwebtoken';
@@ -41,6 +41,10 @@ export class AdminController {
                 catchError(res, 400, error);
             }
             const { username, password } = value;
+            const existUsername = await Admin.findOne({ username });
+            if (existUsername) {
+                catchError(res, 409, 'Username already exist');
+            }
             const hashedPassword = await decode(password, 7);
             const admin = await Admin.create({
                 username, hashedPassword, role: 'admin'
@@ -70,7 +74,7 @@ export class AdminController {
             const mailMessage = {
                 from: process.env.SMTP_USER,
                 to: 'dilshod7861@gmail.com',
-                subject: 'Full stack N20',
+                subject: 'e-navbat',
                 text: otp,
             };
             transporter.sendMail(mailMessage, function (err, info) {
@@ -192,7 +196,14 @@ export class AdminController {
 
     async updateAdminById(req, res) {
         try {
-            await this.findById(req.params.id);
+            const id = req.params.id
+            await AdminController.findById(id);
+            if (req.body.username) {
+                const existUsername = await Admin.findOne({ username: req.body.username });
+                if (existUsername && id != existUsername._id){
+                    catchError(res, 409, 'Username already exist');
+                }
+            }
             const updatedAdmin = await Admin.findByIdAndUpdate(id, req.body, { new: true });
             return res.status(200).json({
                 statusCode: 200,
@@ -206,7 +217,8 @@ export class AdminController {
 
     async deleteAdminById(req, res) {
         try {
-            const admin = await this.findById(req.params.id);
+            const id = req.params.id;
+            const admin = await AdminController.findById(id);
             if (admin.role === 'superadmin') {
                 catchError(res, 400, `Danggg\nSuper admin cannot be delete`);
             };
