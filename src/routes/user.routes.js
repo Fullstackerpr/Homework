@@ -8,6 +8,7 @@ const controller = new UserController;
 
 router
     .post('/signin', controller.signinUser)
+    .post('/confirm-signin', controller.confirmSignin)
     .post('/', controller.createUser)
     .get('/', controller.getAllUsers)
     .get('/:id', controller.getUserById)

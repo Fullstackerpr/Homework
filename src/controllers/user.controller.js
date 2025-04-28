@@ -1,11 +1,13 @@
 import User from "../models/user.model.js";
 import { catchError } from "../utils/error-response.js";
-import { userValidator } from "../utils/user.validation.js";
+import { userValidator } from "../validations/user.validation.js";
 import { decode, encode } from "../utils/bcrypt-encrypt.js";
 import { successRes } from "../utils/success-response.js";
 import {transporter} from '../utils/mailer.js';
 import { ganarateAccessToken, ganarateRefreshToken } from "../utils/ganarate-token.js";
 import MailMessage from "nodemailer/lib/mailer/mail-message.js";
+import { otpGenerator } from "../utils/otp-generetor.js";
+import { getChashe, setChache } from "../utils/cache.js";
 
 
 export class UserController {
@@ -111,11 +113,14 @@ export class UserController {
                 maxAge: 30 * 24 * 60 * 60 * 1000
             });
 
+            const otp =  otpGenerator();
+            setChache(name, otp);
+
             const mailMessage = {
                 from: process.env.SMTP_USER,
                 to: 'bahodirnabijanov782@gmail.com',
-                subject: 'Visca Barca',
-                text:'HALA MADRID && VISCA BARSA'
+                subject: 'online-shop',
+                text: otp
             }
 
             transporter.sendMail(mailMessage, function(err, info){
@@ -131,6 +136,39 @@ export class UserController {
 
             successRes(res, 200, accessToken);
 
+        } catch (error) {
+            catchError(res, 500, error.message);
+        }
+    }
+
+    async confirmSignin(req, res){
+        try {
+            const {name, otp} = req.body;
+            const user = await User.findOne({name});
+
+            if(!user){
+                catchError(res, 404, 'User not found!');
+            }
+
+            const otpChashe = getChashe(name);
+            if(!otpChashe || otp != otpChashe){
+                catchError(res, 400, 'OTP expired');
+            }
+
+            const payload = {id: user._id, role: user.role};
+            const accessToken = ganarateAccessToken(payload);
+            const refreshToken = ganarateRefreshToken(payload);
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: true,
+                maxAge: 30 * 24 * 60 * 60 * 1000
+            });
+
+            return res.status(200).json({
+                statusCode: 200,
+                message: 'success',
+                data: accessToken
+            })
         } catch (error) {
             catchError(res, 500, error.message);
         }
