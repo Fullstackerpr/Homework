@@ -5,6 +5,8 @@ import { decode, encode } from '../utils/bcrypt-encrypt.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/generate-token.js';
 import jwt from 'jsonwebtoken';
 import { transporter } from '../utils/mailer.js';
+import { otpGenerator } from '../utils/otp-generator.js';
+import { getCache, setCache } from '../utils/cache.js';
 
 export class AdminController {
     async createSuperAdmin(req, res) {
@@ -64,6 +66,43 @@ export class AdminController {
             if (!isMatchPassword) {
                 catchError(res, 400, 'Invalid password');
             }
+            const otp = otpGenerator();
+            const mailMessage = {
+                from: process.env.SMTP_USER,
+                to: 'dilshod7861@gmail.com',
+                subject: 'Full stack N20',
+                text: otp,
+            };
+            transporter.sendMail(mailMessage, function (err, info) {
+                if (err) {
+                    console.log(`Error on sending to mail: ${err}`)
+                    catchError(res, 400, err);
+                } else {
+                    console.log(info);
+                    setCache(admin.username, otp);
+                }
+            });
+            return res.status(200).json({
+                statusCode: 200,
+                message: 'success',
+                data: {}
+            });
+        } catch (error) {
+            catchError(res, 500, error.message);
+        }
+    }
+
+    async confirmSigninAdmin(req, res) {
+        try {
+            const { username, otp } = req.body;
+            const admin = await Admin.findOne({ username });
+            if (!admin) {
+                catchError(res, 404, 'Admin not found');
+            }
+            const otpCache = getCache(username);
+            if (!otpCache || otp != otpCache) {
+                catchError(res, 400, 'OTP expired');
+            }
             const payload = { id: admin._id, role: admin.role };
             const accessToken = generateAccessToken(payload);
             const refreshToken = generateRefreshToken(payload);
@@ -71,20 +110,6 @@ export class AdminController {
                 httpOnly: true,
                 secure: true,
                 maxAge: 30 * 24 * 60 * 60 * 1000
-            });
-            const mailMessage = {
-                from: process.env.SMTP_USER,
-                to: 'dilshod7861@gmail.com',
-                subject: 'Full stack N20',
-                text: 'Danggg',
-            };
-            transporter.sendMail(mailMessage, function(err, info){
-                if (err){
-                    console.log(`Error on sending to mail: ${err}`)
-                    catchError(res, 400, err);
-                }else{
-                    console.log(info);
-                }
             });
             return res.status(200).json({
                 statusCode: 200,
