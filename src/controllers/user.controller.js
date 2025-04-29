@@ -141,6 +141,31 @@ export class UserController {
         }
     }
 
+    async signoutUser(req, res){
+        try {
+            const refreshToken = req.cookies.refreshToken;
+            if(!refreshToken){
+                catchError(res, 401, 'Refresh token not found');
+            };
+
+            const decodedToken = JsonWebTokenError.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
+            if(!decodedToken){
+                catchError(res, 401, 'Refresh token expired');
+            }
+
+            res.clearCookie('reshreshToken');
+            return res.status(200).json({
+                statusCode: 200,
+                message: 'success',
+                data: {}
+            });
+        
+        } catch (error) {
+            catchError(res, 500, error.message);
+        }
+
+    }
+
     async confirmSignin(req, res){
         try {
             const {name, otp} = req.body;

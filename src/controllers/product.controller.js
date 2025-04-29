@@ -13,7 +13,7 @@ export class productController{
                 catchError(res, 409, 'User already exists');
             }
             const newProduct = await Product.create(body);
-            if(product){
+            if(newProduct){
                 catchError(res, 409, 'Product already exists!');
             }
             return res.status(201).json({
@@ -39,5 +39,5 @@ export class productController{
         }
     }
 
-    
+
 }
