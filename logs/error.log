@@ -1,0 +1,4 @@
+{"level":"error","message":"Danggg: Database error","timestamp":"2025-05-01T07:04:35.009Z"}
+{"level":"error","message":"Danggg! Database error","timestamp":"2025-05-01T07:05:11.907Z"}
+{"level":"error","message":"Danggg: Super admin already exist","timestamp":"2025-05-01T07:09:17.352Z"}
+{"level":"error","message":"Danggg: E11000 duplicate key error collection: e-navbat-n20.admins index: username_1 dup key: { username: \"Toshmat\" }","timestamp":"2025-05-01T07:09:17.403Z"}
