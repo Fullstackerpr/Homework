@@ -14,4 +14,13 @@ await connectDB();
 
 app.use('/admin', adminRouter);
 
+process.on('uncaughtException', (err) => {
+    if (err) console.log(`Uncaught exception: ${err}`);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reasion, promise) => {
+    console.log(`Unhandled rejection: ${reasion}`);
+});
+
 app.listen(PORT, () => console.log('Server running on port', PORT));
