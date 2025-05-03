@@ -1,0 +1,6 @@
+export * from "./teacher.routes.js"
+export * from "./superadmin.routes.js"
+export * from "./admin.routes.js"
+export * from "./course.routes.js"
+export * from "./user.routes.js"
+export * from "./main.routes.js"
