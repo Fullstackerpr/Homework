@@ -7,7 +7,6 @@ import { otpGenerator } from "../utils/otp-generetor.js";
 import { userValidator } from "../validations/user.validation.js";
 import { successRes } from "../utils/user.success.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/ganarate-token.js";
-import { log } from "console";
 
 
 export class userController {
@@ -15,7 +14,7 @@ export class userController {
         try {
             const {error, value} = userValidator(req.body);
             if(error){
-                catchError(res, 400, 'User validation fail!');
+                return catchError(res, 400, 'User validation fail!');
             }
 
             const { password} = value;
@@ -34,7 +33,7 @@ export class userController {
             successRes(res, 201, newUser);
 
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -42,11 +41,11 @@ export class userController {
         try {
             const user = await User.find();
             if(!user){
-                catchError(res, 404, "Users not found!");
+                return catchError(res, 404, "Users not found!");
             }
             successRes(res, 200, user);
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -55,7 +54,7 @@ export class userController {
             const user = await User.findById(req.params.id);
             successRes(res, 200, user)
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -64,13 +63,13 @@ export class userController {
             const id = req.params.id;
             const user = await User.findById(id);
             if(!user){
-                catchError(res, 404, 'User not found!');
+                return catchError(res, 404, 'User not found!');
             }
 
             const updateUser = await User.findByIdAndUpdate(id, req.body, {new: true});
             successRes(res, 200, updateUser);
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -79,13 +78,13 @@ export class userController {
             const id = req.params.id;
             const user = await User.findById(id);
             if(!user) {
-                catchError(res, 404, 'User not found!');
+                return catchError(res, 404, 'User not found!');
             }
 
             await User.findByIdAndDelete(id);
             successRes(res, 200, {});
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -94,13 +93,13 @@ export class userController {
             const { email, password } = req.body;
             const user = await User.findOne({ email });
             if (!user) {
-                catchError(res, 404, 'User not found');
+                return catchError(res, 404, 'User not found');
             }
             
             
             const isMatchPassword = await encode(password, user.hashedPassword);
             if (!isMatchPassword) {
-                catchError(res, 400, 'Invalid password');
+                return catchError(res, 400, 'Invalid password');
             }
             const otp = otpGenerator();
             const mailMessage = {
@@ -112,7 +111,7 @@ export class userController {
             transporter.sendMail(mailMessage, function (err, info) {
                 if (err) {
                     console.log(`Error on sending to mail: ${err}`)
-                    catchError(res, 400, err);
+                    return catchError(res, 400, err);
                 } else {
                     setCache(user.email, otp);
                     console.log(info);
@@ -121,24 +120,22 @@ export class userController {
             });
             successRes(res, 200, {})
         } catch (error) {
-            catchError(res, 500, error);
+            return catchError(res, 500, error);
         }
     }
-
-
 
     async confirmSigninUser(req, res) {
         try{
             const {email, otp} = req.body;
             const user = await User.findOne({email});
             if(!user) {
-                catchError(res, 404, 'User not found');
+                return catchError(res, 404, 'User not found');
             }
 
             const otpChache = getCache(email);
             
             if (!otp || otp != otpChache){
-                catchError(res, 400, 'Otp expired');
+                return catchError(res, 400, 'Otp expired');
             }
 
             const payload = {id: user._id, role: user.role};
@@ -153,7 +150,7 @@ export class userController {
 
             successRes(res, 200, accessToken);
         } catch(error){
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 
@@ -161,12 +158,12 @@ export class userController {
         try{
             const refreshToken = req.cookies.refreshToken;
             if(!refreshToken){
-                catchError(res, 401, 'Refresh is not defined');
+                return catchError(res, 401, 'Refresh is not defined');
             }            
 
             const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
             if(!decodedToken){
-                catchError(res, 401, 'Refresh token expired');
+                return catchError(res, 401, 'Refresh token expired');
             }
 
             const payload = {id: decodedToken.id, role: decodedToken.role};
@@ -181,19 +178,19 @@ export class userController {
         try {
             const refreshToken = req.cookies.refreshToken;
             if(!refreshToken){
-                catchError(res, 401, 'Refresh is not defined');
+                return catchError(res, 401, 'Refresh is not defined');
             }
 
             const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
             if(!decodedToken){
-                catchError(res, 401, 'Refresh token expired');
+                return catchError(res, 401, 'Refresh token expired');
             }
 
             res.clearCookie('refreshToken');
             successRes(res, 200, {});
 
         } catch (error) {
-            catchError(res, 500, error.message);
+            return catchError(res, 500, error.message);
         }
     }
 }

@@ -1,5 +1,4 @@
 import { hash, compare } from "bcrypt";
-import { log } from "console";
 
 export const decode =  async(data, salt) => {
     const hashedData = await hash(data, salt);

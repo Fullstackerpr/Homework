@@ -22,6 +22,9 @@
     "morgan": "^1.10.0",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.10.1",
-    "otp-generator": "^4.0.1"
+    "otp-generator": "^4.0.1",
+    "prettier": "^3.5.3",
+    "winston": "^3.17.0",
+    "winston-mongodb": "^6.0.0"
   }
 }

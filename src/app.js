@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 import router from './routes/user.routes.js'
 import { connectDb } from './config/db.js';
 import cookieParser from 'cookie-parser';
-import { catchError } from './utils/error-response.js';
+import logger from './utils/logger/logger.js';
 
 config();
 
@@ -17,8 +17,20 @@ connectDb();
 
 
 app.use('/user', router);
-app.use(catchError)
 
-app.listen(PORT, () => {
-    console.log(`Server on running ${PORT}`);
+
+process.on('unhandledRejection', (reasion) => {
+    console.log(`unhandled rejection: ${reasion}`)
 });
+
+app.use((err, res, next) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: err.message || 'Internal server error' });
+    } else {
+      next();
+    }
+  });
+  
+  app.listen(PORT, logger.info(`Server running on port ${PORT}`));
