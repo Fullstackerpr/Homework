@@ -3,7 +3,9 @@ import { config } from 'dotenv';
 import { connectDB } from './db/index.js';
 import adminRouter from './routes/admin.routes.js';
 import doctorRouter from './routes/doctor.routes.js';
+import patientRouter from './routes/patient.routes.js'
 import graphRouter from './routes/graph.routes.js';
+import appointmentRouter from './routes/appointment.routes.js';
 import cookieParser from 'cookie-parser';
 import logger from './utils/logger/logger.js';
 config();
@@ -18,6 +20,8 @@ await connectDB();
 app.use('/admin', adminRouter);
 app.use('/doctor', doctorRouter);
 app.use('/graph', graphRouter);
+app.use('patient', patientRouter);
+app.use('/appointment', appointmentRouter);
 
 process.on('uncaughtException', (err) => {
   if (err) console.log(`Uncaught exception: ${err}`);
@@ -34,7 +38,7 @@ app.use((err, req, res, next) => {
       .status(500)
       .json({ error: err.message || 'Internal server error' });
   } else {
-    next();
+    return next();
   }
 });
 

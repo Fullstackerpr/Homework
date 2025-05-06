@@ -18,7 +18,7 @@ const logger = createLogger({
     }),
     new transports.File({ filename: 'logs/combined.log' }),
     new transports.MongoDB({
-      db: process.env.MONGO_URI,
+      db: process.env.DB_MONGO,
       collection: 'logs',
       level: 'info',
     }),
