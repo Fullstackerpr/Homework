@@ -1,82 +1,66 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { UpdateCountryDto } from './dto/update-country.dto';
-import { readData, writeData } from 'src/utils/file-control';
-
+import { Country } from './model/country.entity';
+import { InjectModel } from '@nestjs/sequelize';
+import { User } from 'src/user/models/user.entity';
 
 @Injectable()
 export class CountryService {
-  create(createCountryDto: CreateCountryDto) {
-    const country = readData();
-    const newcountry = {id: !country.length ? 1 : country.at(-1).id + 1, ...createCountryDto};
-    country.push(newcountry);
-    writeData(country);
-    return {
-      statusCode: 201,
-      message: 'success',
-      data: newcountry
-    }
-  }
-
-  findAll() {
-    return {
-      statusCode: 200,
-      message: 'success',
-      data: readData()
-    }
-  }
-
-  findOne(id: number) {
-    const country = readData();
-    const res = country.find((country:any) => country.id === id)
-    if(!country) {
-      return {
-        statusCode: 404,
-        message: `Not found by id: ${id}`
-      }    
-    } 
-
-    return {
-      statusCode: 200,
-      message: 'success',
-      data: res
-    }
-  }
+  constructor(
+    @InjectModel(Country) private model: typeof Country
+    ){}
   
 
-  update(id: number, updateCountryDto: UpdateCountryDto) {
-    const countries = readData();
-    const index = countries.find((country:any) => country.id === id);
-    if(!index) {
-      return {
-        statusCode: 404,
-        message: `Not found by id: ${id}`
-      }    
-    } 
-    countries[index] = {...countries[index], ...updateCountryDto}
-    countries.writeData();
-    return {
-      statusCode: 200,
-      message: 'success',
-      data: countries[index]
-    }
+  async create(createCountryDto: CreateCountryDto) {
+    const newCountry = this.model.create({...createCountryDto});
+    return newCountry
   }
 
-  remove(id: number) {
-    const countries = readData();
-    const index = countries.find((country:any) => country.id === id);
-    if(!index) {
-      return {
-        statusCode: 404,
-        message: `Not found by id: ${id}`
-      }    
-    } 
-    countries.splice(index, 1)
-    countries.writeData();
+  async findAll() {
+    const countries = await this.model.findAll({include: {model: User}});
     return {
       statusCode: 200,
       message: 'success',
-      data: {}
+      data: countries,
+    };
+  }
+
+  async findOne(id: number) {
+    const country = await this.model.findByPk(id,  {include: {model: User}});
+    if (!country) {
+      throw new NotFoundException(`Country not found by id: ${id}`);
     }
+    return {
+      statusCode: 200,
+      message: 'success',
+      data: country,
+    };
+  }
+
+  async update(id: number, updateCountryDto: UpdateCountryDto) {
+    const country = await this.model.update(updateCountryDto, {where:{id}, returning: true});
+    if (!country) {
+      throw new NotFoundException(`Country not found by id: ${id}`);
+    }
+
+    return {
+      statusCode: 200,
+      message: 'success',
+      data: country,
+    };
+  }
+
+  async remove(id: number) {
+    const country = await this.model.destroy({ where: { id } });
+    if (!country) {
+      throw new NotFoundException(`Country not found by id: ${id}`);
+    }
+
+    return {
+      statusCode: 200,
+      message: 'deleted successfully',
+      data: {},
+    };
   }
 }
