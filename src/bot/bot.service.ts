@@ -6,10 +6,11 @@ import { Context, Markup } from "telegraf";
 export class BotService{
     async onStart(ctx: Context){
         try {
+            console.log(ctx.from)
             ctx.reply('Botga xush kelibsiz!', Markup.keyboard([
-                ['Setting', 'Help'],
-                ['Space', 'Date'],
-                ['Location', 'Filial']
+                ['⚙️Setting', '🆘Help'],
+                ['Menu', '🪑Space'],
+                ['📅Date', '🏢Filial']
             ])
             .resize()
             .oneTime()
